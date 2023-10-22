@@ -491,6 +491,10 @@ HRESULT WebDav::HrHandleRptMulGet()
 		size_t found = 0;
 		auto lpXmlContentNode = lpXmlChildNode->children;
 
+		if (lpXmlContentNode == nullptr) {
+			continue;
+		}
+
 		HrSetDavPropName(&(sWebVal.sPropName),lpXmlChildNode);
 		strGuid = x2s(lpXmlContentNode->content);
 		found = strGuid.rfind("/");
