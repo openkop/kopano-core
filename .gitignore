@@ -177,3 +177,5 @@ stamp-h2
 /test/test-admin.log.xml
 /test/test-ectools.log
 /test/test-ectools.log.xml
+
+/docker/*.env

@@ -1,0 +1,103 @@
+services:
+  mariadb:
+    image: mariadb:latest
+    restart: always
+    healthcheck:
+      test: mysqladmin ping --password="${DATABASE_ROOT_PASSWORD}"
+    command: --innodb_buffer_pool_size=16G --innodb_log_file_size=2G --innodb_log_buffer_size=512M --innodb_file_per_table --key_buffer_size=256M --max_allowed_packet=64M --thread_stack=256K --thread_cache_size=32 --max_connections=8192 --query_cache_limit=2M --query_cache_size=32M --max_connect_errors=2048 --innodb_buffer_pool_instances=4 --table_cache=1000 --skip-name-resolve --skip-external-locking
+    environment:
+      - MARIADB_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
+      - MARIADB_DATABASE=${DATABASE_NAME}
+      - MARIADB_USER=${DATABASE_USER}
+      - MARIADB_PASSWORD=${DATABASE_PASSWORD}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+
+  core:
+    build: ..
+    image: openkop:latest
+    command: /root/core.sh
+    restart: always
+    healthcheck:
+      test: /usr/sbin/kopano-admin -l > /dev/null
+    depends_on:
+      mariadb
+    environment:
+      - KC_SERVER_mysql_host=mariadb
+      - KC_SERVER_mysql_database=${DATABASE_NAME}
+      - KC_SERVER_mysql_user=${DATABASE_USER}
+      - KC_SERVER_mysql_password=${DATABASE_PASSWORD}
+    env_file:
+      - kc_server.env
+      - kc_ldap.env
+      - kc_archiver.env
+    volumes:
+      - attachments:/var/lib/kopano/attachments/
+      - kopano-sockets:/var/run/kopano/
+
+  spooler:
+    build: ..
+    image: openkop:latest
+    command: /root/spooler.sh
+    restart: always
+    depends_on:
+      core
+    env_file:
+      - kc_spooler.env
+    volumes:
+      - kopano-sockets:/var/run/kopano/
+
+  dagent:
+    build: ..
+    image: openkop:latest
+    command: /root/dagent.sh
+    restart: always
+    healthcheck:
+      test: /usr/lib/nagios/plugins/check_smtp -H 127.0.0.1 -p 2003 || exit 1
+    depends_on:
+      core
+    env_file:
+      - kc_dagent.env
+      - kc_archiver.env
+    ports:
+      - "192.168.99.1:2005:2003"
+    volumes:
+      - kopano-sockets:/var/run/kopano/
+
+  gateway:
+    build: ..
+    image: openkop:latest
+    command: /root/gateway.sh
+    restart: always
+    healthcheck:
+      test: /usr/lib/nagios/plugins/check_imap -H 127.0.0.1 -p 143 || exit 1
+    environment:
+      - KC_GATEWAY_server_socket=http://core:236/kopano
+    depends_on:
+      core
+    env_file:
+      - kc_gateway.env
+    ports:
+      - "127.0.0.1:12111:110"
+      - "127.0.0.1:12144:143"
+      - "192.168.99.1:12144:143"
+
+  ical:
+    build: ..
+    image: openkop:latest
+    command: sleep 24d
+    privileged: true
+    restart: always
+    environment:
+      - KC_ICAL_server_socket=http://core:236/kopano
+    env_file:
+      - kc_ical.env
+    depends_on:
+      core
+    ports:
+      - "0.0.0.0:9003:80"
+
+volumes:
+  mariadb-data:
+  attachments:
+  kopano-sockets:
