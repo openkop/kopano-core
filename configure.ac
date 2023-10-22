@@ -423,7 +423,7 @@ LDAP_FLAGS=""
 LDAP_LIBS=""
 AC_CHECK_HEADERS([ldap.h], [
 	LDAP_FLAGS="-DLDAP_DEPRECATED=1"
-	LDAP_LIBS="-lldap_r"
+	LDAP_LIBS="-lldap"
 	want_ldap=yes
 ])
 AC_SUBST(LDAP_LIBS)
