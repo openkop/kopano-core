@@ -734,6 +734,9 @@ mapi_la_CXXFLAGS = ${AM_CXXFLAGS} ${ZPHPCXXFLAGS}
 if WITH_PHP7
 phplib_LTLIBRARIES = mapi.la
 endif
+if WITH_PHP8
+phplib_LTLIBRARIES = mapi.la
+endif
 mapi_la_SOURCES = \
 	php-ext/ECImportContentsChangesProxy.cpp \
 	php-ext/ECImportContentsChangesProxy.h \

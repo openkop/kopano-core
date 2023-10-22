@@ -289,7 +289,8 @@ AS_IF([test "$with_php" != "no"], [
 	echo "PHP version: $PHP_VERSION"
 	AS_CASE([$PHP_VERSION],
 		[5.*], [AC_MSG_ERROR([php5 is not supported])],
-		[7.*], [with_php=7]
+		[7.*], [with_php=7],
+		[8.*], [with_php=8],
 	)
 ])
 PKG_CHECK_MODULES([libHX], [libHX >= 1.10])
@@ -697,6 +698,7 @@ AM_CONDITIONAL([WITH_KRB5], [test -n "$KRB5_LIBS"])
 AM_CONDITIONAL([WITH_LDAP], [test "$want_ldap" = yes])
 AM_CONDITIONAL([WITH_PAM], [test -n "$PAM_LIBS"])
 AM_CONDITIONAL([WITH_PHP7], [test "$with_php" = 7])
+AM_CONDITIONAL([WITH_PHP8], [test "$with_php" = 8])
 AM_CONDITIONAL([WITH_UNIX], [test "$want_unix" = yes])
 AS_IF([test -n "$PYTHON_LIBS" || test -n "$PYTHON"], [AM_PATH_PYTHON([2.5])])
 
